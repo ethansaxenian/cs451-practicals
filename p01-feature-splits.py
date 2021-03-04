@@ -1,6 +1,5 @@
 # Decision Trees: Feature Splits
 
-#%%
 # Python typing introduced in 3.5: https://docs.python.org/3/library/typing.html
 from typing import List
 
@@ -10,21 +9,14 @@ from dataclasses import dataclass
 # My python file (very limited for now, but we will build up shared functions)
 from shared import TODO
 
-#%%
+
 # Let's define a really simple class with two fields:
 @dataclass
 class DataPoint:
     temperature: float
     frozen: bool
 
-    def secret_answer(self) -> bool:
-        return self.temperature <= 32
 
-    def clone(self) -> "DataPoint":
-        return DataPoint(self.temperature, self.frozen)
-
-
-# Fahrenheit, sorry.
 data = [
     # vermont temperatures; frozen=True
     DataPoint(0, True),
@@ -33,9 +25,7 @@ data = [
     DataPoint(11, True),
     DataPoint(6, True),
     DataPoint(28, True),
-    DataPoint(31, True),
     # warm temperatures; frozen=False
-    DataPoint(33, False),
     DataPoint(45, False),
     DataPoint(76, False),
     DataPoint(60, False),
@@ -57,18 +47,10 @@ for d in data:
 
 
 def find_candidate_splits(data: List[DataPoint]) -> List[float]:
+    sorted_temps = sorted([point.temperature for point in data])  # isolate the temperatures into a sorted list
     midpoints = []
-    # 1 how do I sort that by temperature
-    def get_temp(pt: DataPoint):
-        return pt.temperature
-
-    data.sort(key=get_temp)
-    # loop looking at two at a time
-    for i in range(len(data) - 1):
-        left = data[i]
-        right = data[i + 1]
-        mid = (left.temperature + right.temperature) / 2.0
-        midpoints.append(mid)
+    for i in range(len(sorted_temps)-1):
+        midpoints.append((sorted_temps[i] + sorted_temps[i+1]) / 2)
     return midpoints
 
 
@@ -86,15 +68,8 @@ def gini_impurity(points: List[DataPoint]) -> float:
 
 
 def impurity_of_split(points: List[DataPoint], split: float) -> float:
-    smaller = []
-    bigger = []
-
-    for p in points:
-        if p.temperature < split:
-            smaller.append(p)
-        else:
-            bigger.append(p)
-
+    smaller = [point for point in points if point.temperature < split]
+    bigger = [point for point in points if point.temperature > split]
     return gini_impurity(smaller) + gini_impurity(bigger)
 
 
@@ -103,7 +78,12 @@ if __name__ == "__main__":
     print("Impurity of first-six (all True): ", gini_impurity(data[:6]))
     print("")
     for split in find_candidate_splits(data):
-        score = impurity_of_split(data, split)
-        print("splitting at {} gives us impurity {}".format(split, score))
-        if score == 0.0:
-            break
+        print(f"splitting at {split} gives us impurity {impurity_of_split(data, split)}")
+    test_data = [
+        DataPoint(6, True),
+        DataPoint(2, True),
+        DataPoint(4, True),
+        DataPoint(0, True),
+        DataPoint(8, True),
+    ]
+    assert find_candidate_splits(test_data) == [1, 3, 5, 7]
