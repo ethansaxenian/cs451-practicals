@@ -18,7 +18,7 @@ from sklearn.tree import DecisionTreeClassifier
 import json  # standard python
 from shared import dataset_local_path, TODO  # helper functions I made
 
-#%% load up the data
+# load up the data
 examples = []
 feature_names = set([])
 
@@ -35,7 +35,7 @@ with open(dataset_local_path("poetry_id.jsonl")) as fp:
         # hold onto this single dictionary.
         examples.append(keep)
 
-#%% Convert data to 'matrices'
+# Convert data to 'matrices'
 # NOTE: there are better ways to do this, built-in to scikit-learn. We will see them soon.
 
 # turn the set of 'string' feature names into a list (so we can use their order as matrix columns!)
@@ -49,7 +49,7 @@ train_X = []
 test_y = []
 test_X = []
 
-for i, row in enumerate(examples):
+for v, row in enumerate(examples):
     # grab 'y' and treat it as our label.
     example_y = row["y"]
     # create a 'row' of our X matrix:
@@ -58,45 +58,47 @@ for i, row in enumerate(examples):
         example_x.append(float(row[feature_name]))
 
     # put every fourth page into the test set:
-    if i % 4 == 0:
+    if v % 4 == 0:
         test_X.append(example_x)
         test_y.append(example_y)
     else:
         train_X.append(example_x)
         train_y.append(example_y)
 
-print(
-    "There are {} training examples and {} testing examples.".format(
-        len(train_y), len(test_y)
-    )
-)
+print(f"There are {len(train_y)} training examples and {len(test_y)} testing examples.")
 
-#%% Now actually train the model...
 
-# Create a regression-tree object:
-f = DecisionTreeClassifier(
-    splitter="best",
-    max_features=None,
-    criterion="gini",
-    max_depth=None,
-    random_state=13,
-)  # type:ignore
+"""============== Experiments for Practical 02 ====================="""
 
-# train the tree!
-f.fit(train_X, train_y)
 
-# did it memorize OK?
-print("Score on Training: {:.3f}".format(f.score(train_X, train_y)))
-print("Score on Testing: {:.3f}".format(f.score(test_X, test_y)))
+def train_tree(param: str, value: any) -> tuple[float, float]:
+    f = DecisionTreeClassifier()
+    setattr(f, param, value)
+    f.fit(train_X, train_y)
 
-## Actual 'practical' assignment.
-TODO(
-    "1. Figure out what all of the parameters I listed for the DecisionTreeClassifier do."
-)
-# Consult the documentation: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-TODO("2. Pick one parameter, vary it, and find some version of the 'best' setting.")
-# Default performance:
-# There are 2079 training examples and 693 testing examples.
-# Score on Training: 1.000
-# Score on Testing: 0.889
-TODO("3. Leave clear code for running your experiment!")
+    return round(f.score(train_X, train_y), 3), round(f.score(test_X, test_y), 3)
+
+
+def run_experiment(attr: str, values: list):
+    training_data = {}
+    testing_data = {}
+    for v in values:
+        train_score, test_score = train_tree(attr, v)
+        training_data[train_score] = testing_data[test_score] = v
+    best_training_score = max(training_data)
+    best_testing_score = max(testing_data)
+    print(f"best value for {attr} (training): {training_data[best_training_score]} with a score of {best_training_score}")
+    print(f"best value for {attr} (testing): {testing_data[best_testing_score]} with a score of {best_testing_score}")
+
+
+if __name__ == '__main__':
+    experiments = {
+        "splitter": ["best", "random"],
+        "max_features": [*range(1, 20), "auto", "sqrt", "log2", None],
+        "criterion": ["gini", "entropy"],
+        "max_depth": [*range(1, 20), None],
+        "random_state": [*range(1, 20), None]
+    }
+    for attribute, values in experiments.items():
+        print("=" * 80)
+        run_experiment(attribute, values)
