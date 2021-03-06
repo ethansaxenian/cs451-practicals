@@ -49,7 +49,7 @@ train_X = []
 test_y = []
 test_X = []
 
-for v, row in enumerate(examples):
+for i, row in enumerate(examples):
     # grab 'y' and treat it as our label.
     example_y = row["y"]
     # create a 'row' of our X matrix:
@@ -58,7 +58,7 @@ for v, row in enumerate(examples):
         example_x.append(float(row[feature_name]))
 
     # put every fourth page into the test set:
-    if v % 4 == 0:
+    if i % 4 == 0:
         test_X.append(example_x)
         test_y.append(example_y)
     else:
