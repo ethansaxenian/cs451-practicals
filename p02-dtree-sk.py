@@ -94,9 +94,9 @@ def run_experiment(attr: str, values: list):
 if __name__ == '__main__':
     experiments = {
         "splitter": ["best", "random"],
-        "max_features": [*range(1, 20), "auto", "sqrt", "log2", None],
+        "max_features": [*range(1, 10), "auto", "sqrt", "log2", None],
         "criterion": ["gini", "entropy"],
-        "max_depth": [*range(1, 20), None],
+        "max_depth": [*range(1, 10), None],
         "random_state": [*range(1, 20), None]
     }
     for attribute, values in experiments.items():
