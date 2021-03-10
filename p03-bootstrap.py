@@ -12,8 +12,6 @@ Use pip:
     pip install -r requirements.txt
 """
 
-#%%
-
 # We won't be able to get past these import statments if you don't install the libraries!
 # external libraries:
 from sklearn.linear_model import Perceptron
@@ -31,7 +29,7 @@ from typing import Dict, Any, List
 # helper functions I made
 from shared import dataset_local_path, TODO
 
-#%% load up the data
+# load up the data
 examples = []
 ys = []
 
@@ -45,7 +43,7 @@ with open(dataset_local_path("poetry_id.jsonl")) as fp:
         # hold onto this single dictionary.
         examples.append(keep)
 
-#%% Convert data to 'matrices'
+# Convert data to 'matrices'
 # We did this manually in p02, but SciKit-Learn has a tool for that:
 
 from sklearn.feature_extraction import DictVectorizer
@@ -55,7 +53,7 @@ feature_numbering.fit(examples)
 X = feature_numbering.transform(examples)
 
 print("Features as {} matrix.".format(X.shape))
-#%% Set up our ML problem:
+# Set up our ML problem:
 
 from sklearn.model_selection import train_test_split
 
@@ -74,7 +72,7 @@ X_train, X_vali, y_train, y_vali = train_test_split(
 
 # In this lab, we'll ignore test data, for the most part.
 
-#%% DecisionTree Parameters:
+# DecisionTree Parameters:
 
 params = {
     "criterion": "gini",
@@ -93,31 +91,32 @@ for randomness in range(N_MODELS):
     f_seed.fit(X_train, y_train)
     seed_based_accuracies.append(f_seed.score(X_vali, y_vali))
 
+depth_data = []  # collect data by depth
+for i in range(1, 11):
+    bootstrap_based_accuracies = []
+    # single seed, bootstrap-sampling of predictions:
+    f_single = DecisionTreeClassifier(random_state=RANDOM_SEED, max_depth=i)
+    f_single.fit(X_train, y_train)
+    y_pred = f_single.predict(X_vali)
 
-bootstrap_based_accuracies = []
-# single seed, bootstrap-sampling of predictions:
-f_single = DecisionTreeClassifier(random_state=RANDOM_SEED, **params)
-f_single.fit(X_train, y_train)
-y_pred = f_single.predict(X_vali)
+    # do the bootstrap:
+    for trial in range(N_SAMPLES):
+        sample_pred, sample_truth = resample(
+            y_pred, y_vali, random_state=trial + RANDOM_SEED
+        )
+        score = accuracy_score(y_true=sample_truth, y_pred=sample_pred)
+        bootstrap_based_accuracies.append(score)
+    depth_data.append(bootstrap_based_accuracies)
 
-# do the bootstrap:
-for trial in range(N_SAMPLES):
-    sample_pred, sample_truth = resample(
-        y_pred, y_vali, random_state=trial + RANDOM_SEED
-    )
-    score = accuracy_score(y_true=sample_truth, y_pred=sample_pred)
-    bootstrap_based_accuracies.append(score)
-
-
-boxplot_data: List[List[float]] = [seed_based_accuracies, bootstrap_based_accuracies]
+boxplot_data: List[List[float]] = depth_data
 plt.boxplot(boxplot_data)
-plt.xticks(ticks=[1, 2], labels=["Seed-Based", "Bootstrap-Based"])
+plt.xticks(ticks=range(1, 11))
 plt.xlabel("Sampling Method")
 plt.ylabel("Accuracy")
 plt.ylim([0.8, 1.0])
 plt.show()
 # if plt.show is not working, try opening the result of plt.savefig instead!
-plt.savefig("dtree-variance.png")
+# plt.savefig("dtree-variance.png")
 
 TODO("1. understand/compare the bounds generated between the two methods.")
 TODO("2. Do one of the two following experiments.")
