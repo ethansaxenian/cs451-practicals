@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn import preprocessing
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.base import ClassifierMixin
@@ -16,7 +17,7 @@ import json
 from typing import Dict, Any, List
 
 
-#%% load up the data
+# load up the data
 examples = []
 ys = []
 
@@ -30,15 +31,17 @@ with open(dataset_local_path("poetry_id.jsonl")) as fp:
         # hold onto this single dictionary.
         examples.append(keep)
 
-## CONVERT TO MATRIX:
+# CONVERT TO MATRIX:
 
 feature_numbering = DictVectorizer(sort=True)
-X = feature_numbering.fit_transform(examples)
+unscaled_X = feature_numbering.fit_transform(examples)
+scaler = preprocessing.StandardScaler(with_mean=False).fit(unscaled_X)
+X = scaler.transform(unscaled_X)
 
 print("Features as {} matrix.".format(X.shape))
 
 
-## SPLIT DATA:
+# SPLIT DATA:
 
 RANDOM_SEED = 12345678
 
@@ -55,7 +58,7 @@ X_train, X_vali, y_train, y_vali = train_test_split(
 
 print(X_train.shape, X_vali.shape, X_test.shape)
 
-#%% Define & Run Experiments
+# Define & Run Experiments
 @dataclass
 class ExperimentResult:
     vali_acc: float
@@ -128,7 +131,7 @@ def consider_logistic_regression() -> ExperimentResult:
         params = {
             "random_state": rnd,
             "penalty": "l2",
-            "max_iter": 100,
+            "max_iter": 500,
             "C": 1.0,
         }
         f = LogisticRegression(**params)
@@ -140,15 +143,16 @@ def consider_logistic_regression() -> ExperimentResult:
     return max(performances, key=lambda result: result.vali_acc)
 
 
-def consider_neural_net() -> ExperimentResult:
+def consider_neural_net() -> ExperimentResult:  # Optimized
     print("Consider Multi-Layer Perceptron.")
     performances: List[ExperimentResult] = []
     for rnd in range(3):
         params = {
-            "hidden_layer_sizes": (32,),
+            "hidden_layer_sizes": (32, 32, 32, 32),
             "random_state": rnd,
-            "solver": "lbfgs",
-            "max_iter": 500,
+            "solver": "adam",
+            "learning_rate_init": 0.0001,
+            "max_iter": 3500,
             "alpha": 0.0001,
         }
         f = MLPClassifier(**params)
@@ -172,7 +176,7 @@ print("Best DTree", dtree)
 print("Best RForest", rforest)
 print("Best MLP", mlp)
 
-#%% Plot Results
+# Plot Results
 
 # Helper method to make a series of box-plots from a dictionary:
 simple_boxplot(
@@ -187,10 +191,4 @@ simple_boxplot(
     xlabel="Model",
     ylabel="Accuracy",
     save="model-cmp.png",
-)
-
-TODO("1. Understand consider_decision_trees; I have 'tuned' it.")
-TODO("2. Find appropriate max_iter settings to stop warning messages.")
-TODO(
-    "3. Pick a model: {perceptron, logistic regression, neural_network} and optimize it!"
 )

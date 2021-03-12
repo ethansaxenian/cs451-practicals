@@ -95,7 +95,7 @@ depth_data = []  # collect data by depth
 for i in range(1, 11):
     bootstrap_based_accuracies = []
     # single seed, bootstrap-sampling of predictions:
-    f_single = DecisionTreeClassifier(random_state=RANDOM_SEED, max_depth=i)
+    f_single = DecisionTreeClassifier(max_depth=i, splitter="random", random_state=RANDOM_SEED)
     f_single.fit(X_train, y_train)
     y_pred = f_single.predict(X_vali)
 
@@ -114,15 +114,6 @@ plt.xticks(ticks=range(1, 11))
 plt.xlabel("Sampling Method")
 plt.ylabel("Accuracy")
 plt.ylim([0.8, 1.0])
-plt.show()
+# plt.show()
 # if plt.show is not working, try opening the result of plt.savefig instead!
-# plt.savefig("dtree-variance.png")
-
-TODO("1. understand/compare the bounds generated between the two methods.")
-TODO("2. Do one of the two following experiments.")
-TODO(
-    "2A. Evaluation++: what happens to the variance if we do K bootstrap samples for each of M models?"
-)
-TODO(
-    "2B. Return to experimenting on the decision tree: modify the plot to show ~10 max_depths of the decision tree."
-)
+plt.savefig("dtree-variance.png")
