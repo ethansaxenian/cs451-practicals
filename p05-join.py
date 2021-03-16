@@ -155,7 +155,7 @@ for name, m in models.items():
 # TODO("2.B. Do Random Forests do better?")
 """
 Yes! The Decision Tree vali-acc hovers around 0.75, and vali-auc hovers around 0.73. The Random Forest vali-acc
-reaches around 0.82 and vali-auc reaches 0.88.
+reaches 0.83 and vali-auc reaches 0.88.
 """
 # TODO(
 #     "2.C. Is it randomness? Use simple_boxplot and bootstrap_auc/bootstrap_acc to see if the differences are meaningful!"
