@@ -6,11 +6,12 @@ This data is the "Is Wikipedia Literary" that I pitched.
 You can contribute to science or get a sense of the data here: https://label.jjfoley.me/wiki
 """
 
-import gzip, json
-from shared import dataset_local_path, TODO
+import gzip
+import json
 from dataclasses import dataclass
 from typing import Dict, List
 
+from shared import dataset_local_path
 
 """
 Problem 1: We have a copy of Wikipedia (I spared you the other 6 million pages).
@@ -61,17 +62,17 @@ print(len(pages), len(labels))
 print(pages[0])
 print(labels[0])
 
-joined_data: Dict[str, JoinedWikiData] = {}
-
-
 # TODO("1. create a list of JoinedWikiData from the ``pages`` and ``labels`` lists.")
 # This challenge has some very short solutions, so it's more conceptual. If you're stuck after ~10-20 minutes of thinking, ask!
-for p in pages:
-    joined_data[p.wiki_id] = JoinedWikiData(
-        p.wiki_id, is_literary=False, title=p.title, body=p.body
-    )
-for l in labels:
-    joined_data[l.wiki_id].is_literary = l.is_literary
+
+labels_by_id: Dict[str, JustWikiLabel] = {label.wiki_id: label for label in labels}
+
+joined_data: Dict[str, JoinedWikiData] = {}
+for page in pages:
+    if page.wiki_id in labels_by_id:
+        label_from_page = labels_by_id[page.wiki_id]
+        data_object = JoinedWikiData(page.wiki_id, label_from_page.is_literary, page.title, page.body)
+        joined_data[page.wiki_id] = data_object
 
 ############### Problem 1 ends here ###############
 
@@ -127,6 +128,7 @@ X_test = word_to_column.transform(ex_test)
 print("Ready to Learn!")
 from sklearn.linear_model import LogisticRegression, SGDClassifier, Perceptron
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score
 
 models = {
@@ -134,6 +136,7 @@ models = {
     "Perceptron": Perceptron(),
     "LogisticRegression": LogisticRegression(),
     "DTree": DecisionTreeClassifier(),
+    "RandomForest": RandomForestClassifier()
 }
 
 for name, m in models.items():
@@ -146,26 +149,15 @@ for name, m in models.items():
         scores = m.predict_proba(X_vali)[:, 1]
     print("\tVali-AUC: {:.3}".format(roc_auc_score(y_score=scores, y_true=y_vali)))
 
-"""
-Results should be something like:
 
-SGDClassifier:
-        Vali-Acc: 0.84
-        Vali-AUC: 0.879
-Perceptron:
-        Vali-Acc: 0.815
-        Vali-AUC: 0.844
-LogisticRegression:
-        Vali-Acc: 0.788
-        Vali-AUC: 0.88
-DTree:
-        Vali-Acc: 0.739
-        Vali-AUC: 0.71
+# TODO("2. Explore why DecisionTrees are not beating linear models. Answer one of:")
+# TODO("2.A. Is it a bad depth?")
+# TODO("2.B. Do Random Forests do better?")
 """
-TODO("2. Explore why DecisionTrees are not beating linear models. Answer one of:")
-TODO("2.A. Is it a bad depth?")
-TODO("2.B. Do Random Forests do better?")
-TODO(
-    "2.C. Is it randomness? Use simple_boxplot and bootstrap_auc/bootstrap_acc to see if the differences are meaningful!"
-)
-TODO("2.D. Is it randomness? Control for random_state parameters!")
+Yes! The Decision Tree vali-acc hovers around 0.75, and vali-auc hovers around 0.73. The Random Forest vali-acc
+reaches around 0.82 and vali-auc reaches 0.88.
+"""
+# TODO(
+#     "2.C. Is it randomness? Use simple_boxplot and bootstrap_auc/bootstrap_acc to see if the differences are meaningful!"
+# )
+# TODO("2.D. Is it randomness? Control for random_state parameters!")
