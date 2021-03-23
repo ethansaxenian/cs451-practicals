@@ -64,6 +64,11 @@ rX_train, rX_vali, y_train, y_vali = train_test_split(
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # TODO: Exploration 2: What normalization is best for your models?
+"""
+max appears to be the best
+with var, skP performed better but the two other perceptrons performed worse
+all three models performed worse with no scaling
+"""
 # THINK: Why didn't we normalize for decision trees?
 #
 # These are the three approaches to scaling I see in practice: variance / standard-deviation, min/max, nothing.
@@ -149,7 +154,7 @@ def train_perceptron(y, X, y_vali, X_vali, num_iter=100, seed=1231) -> LinearMod
     w = np.zeros((num_features, 1))
     b = 0.0
     indices = list(range(num_examples))
-    for iteration in range(num_iter):
+    for iteration in tqdm(range(num_iter)):
         rand.shuffle(indices)
         wrong = 0
         for i in indices:
@@ -185,7 +190,7 @@ def train_averaged_perceptron(
     b = 0.0
     current_correct = 0
     indices = list(range(num_examples))
-    for iteration in range(num_iter):
+    for iteration in tqdm(range(num_iter)):
         rand.shuffle(indices)
         wrong = 0
         for i in indices:
@@ -226,32 +231,40 @@ print("AP. Vali-Accuracy: {:.3}".format(model.score(X_vali, y_vali)))
 
 # Note that Sci-Kit Learn's Perceptron uses an alternative method of training.
 # Is it an averaged perceptron or a regular perceptron?
+
+
+def train_model(model, name: str):
+    print(f"Train {name}")
+    for _ in tqdm(range(1000)):
+        # Note we use partial_fit rather than fit to expose the loop to our code!
+        model.partial_fit(X_train, y_train, classes=(0, 1))
+        learning_curves[name].add_sample(model, X_train, y_train, X_vali, y_vali)
+    print(f"{name}. Train-Accuracy: {model.score(X_train, y_train):.3}")
+    print(f"{name}. Vali-Accuracy: {model.score(X_vali, y_vali):.3}")
+
+
 skP = Perceptron()
-print("Train sklearn-Perceptron (skP)")
-for iter in tqdm(range(1000)):
-    # Note we use partial_fit rather than fit to expose the loop to our code!
-    skP.partial_fit(X_train, y_train, classes=(0, 1))
-    learning_curves["skPerceptron"].add_sample(skP, X_train, y_train, X_vali, y_vali)
-print("skP. Train-Accuracy: {:.3}".format(skP.score(X_train, y_train)))
-print("skP. Vali-Accuracy: {:.3}".format(skP.score(X_vali, y_vali)))
+train_model(skP, "skPerceptron")
 
 
-## TODO Exploration 1: use a loop around partial-fit to generate another graph!
-#
-## TODO Exploration 1A: Try a MLP (Multi-Layer Perceptron).
+# TODO Exploration 1: use a loop around partial-fit to generate another graph!
+
+# TODO Exploration 1A: Try a MLP (Multi-Layer Perceptron).
 mlp = MLPClassifier(hidden_layer_sizes=(32,))
-## TODO Exploration 1B: Try another Linear Model
+train_model(mlp, type(mlp).__name__)
+# TODO Exploration 1B: Try another Linear Model
 sgdc = SGDClassifier()
+train_model(sgdc, type(sgdc).__name__)
 
-## TODO Think: Why can't we make a graph like this for DecisionTreeClassifier?
+# TODO Think: Why can't we make a graph like this for DecisionTreeClassifier?
 
 #%% Plot!
 
-#
+
 # This is the first time we're seeing how to make a line plot.
 # Also the first time we're creating plots in a loop! (Gets too busy if they're all on the same chart, IMO)
 # Matplotlib *does* have subplots, but they're so fiddly.
-#
+
 for key, dataset in learning_curves.items():
     xs = np.array(list(range(len(dataset.train))))
     # line-plot:
