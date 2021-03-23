@@ -103,7 +103,7 @@ from sklearn.naive_bayes import MultinomialNB
 
 # Try a couple alpha values (what to do with zero-prob words!)
 # Alpha can really be anything positive!
-for alpha in [0.1, 1.0, 10.0]:
+for alpha in [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0, 10.0]:
     m = MultinomialNB(alpha=alpha)
     m.fit(X_train, y_train)
     scores = m.predict_proba(X_vali)[:, 1]
@@ -185,7 +185,7 @@ def score_words(
 #
 # The linear parameter is traditionally a non-zero, non-one probability:
 #     (0 < linear < 1)
-for linear in [0.1, 0.2, 0.3, 0.4, 0.5, 0.9]:
+for linear in [0.0001, 0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.9]:
     scores = []
     for ex in ex_vali:
         score = score_words(text_to_words(ex), linear, is_positive, is_random)
@@ -213,17 +213,51 @@ for linear in [0.1, 0.2, 0.3, 0.4, 0.5, 0.9]:
 simple_boxplot(results, ylabel="AUC", save="{}-text-AUC.png".format(dataset))
 
 
+#  ------------------------- 2A -----------------------------------
+results_2A: Dict[str, List[float]] = {}
+
+for lowercase in [True, False]:
+    for n in [1, 2, 3]:
+        for binary in [True, False]:
+            word_features = CountVectorizer(
+                strip_accents="unicode",
+                lowercase=lowercase,
+                ngram_range=(n, n),
+                binary=binary,
+            )
+
+            text_to_words = word_features.build_analyzer()
+
+            word_features.fit(ex_train)
+
+            X_train = word_features.transform(ex_train)
+            X_vali = word_features.transform(ex_vali)
+            X_test = word_features.transform(ex_test)
+
+            m = MultinomialNB(alpha=0.5)
+            m.fit(X_train, y_train)
+            scores = m.predict_proba(X_vali)[:, 1]
+            results_2A[f"lowercase={lowercase}, ngrams={n}, binary={binary}"] = bootstrap_auc(m, X_vali, y_vali)
+
+simple_boxplot(results_2A, ylabel="AUC", save=f"{dataset}-text-AUC-2A.png")
+
 from shared import TODO
 
-TODO(
-    "1. Explore alpha and linear parameters; make a decision about what a good choice for this dataset might be."
-)
+# TODO(
+#     "1. Explore alpha and linear parameters; make a decision about what a good choice for this dataset might be."
+# )
+"""
+Looks like alpha between 0.1 and 1.0 is best and linear less than 0.4 is best
+"""
 
 # 2 is once again a choose-your-own:
-TODO(
-    "2A. Explore ngrams, lowercase v. uppercase, etc. (how changing CountVectorizer changes performance, or not)"
-)
-TODO(
-    "2B. Explore the difference between today's approaches to the WIKI dataset and yesterday's."
-)
-TODO("2C. Explore the differences between the WIKI dataset and the POETRY dataset.")
+# TODO(
+#     "2A. Explore ngrams, lowercase v. uppercase, etc. (how changing CountVectorizer changes performance, or not)"
+# )
+"""
+see WIKI-text-AUC-2A.png
+
+The best configuration seems to be lowercase = False, with 1-grams and binary counts.
+Binary counts had the biggest impact on performance, which was surprising - I would think the opposite is true. 
+Something to think about for my own project!
+"""
