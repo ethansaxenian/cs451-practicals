@@ -67,7 +67,6 @@ for n_samples in sizes:
         # Note here, I'm using a simple classifier for speed, rather than the best.
         clf = DecisionTreeClassifier(random_state=RANDOM_SEED + n_samples + i)
         clf.fit(X_sample, y_sample)
-        # so we get 100 scores per percentage-point.
         scores[n_samples].append(clf.score(X_vali, y_vali))
     # We'll first look at a line-plot of the mean:
     acc_mean.append(np.mean(scores[n_samples]))
