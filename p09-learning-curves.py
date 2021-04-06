@@ -50,51 +50,48 @@ N = len(y_train)
 num_trials = 100
 percentages = list(range(5, 100, 5))
 percentages.append(100)
+sizes = list(range(50, N, 50))
 scores = {}
 acc_mean = []
 acc_std = []
 
 # Which subset of data will potentially really matter.
-for train_percent in percentages:
-    n_samples = int((train_percent / 100) * N)
-    print("{}% == {} samples...".format(train_percent, n_samples))
-    label = "{}".format(train_percent, n_samples)
-
+for n_samples in sizes:
+    print(f"{n_samples} samples...")
     # So we consider num_trials=100 subsamples, and train a model on each.
-    scores[label] = []
+    scores[n_samples] = []
     for i in range(num_trials):
         X_sample, y_sample = resample(
             X_train, y_train, n_samples=n_samples, replace=False
         )  # type:ignore
         # Note here, I'm using a simple classifier for speed, rather than the best.
-        clf = SGDClassifier(random_state=RANDOM_SEED + train_percent + i)
+        clf = DecisionTreeClassifier(random_state=RANDOM_SEED + n_samples + i)
         clf.fit(X_sample, y_sample)
         # so we get 100 scores per percentage-point.
-        scores[label].append(clf.score(X_vali, y_vali))
+        scores[n_samples].append(clf.score(X_vali, y_vali))
     # We'll first look at a line-plot of the mean:
-    acc_mean.append(np.mean(scores[label]))
-    acc_std.append(np.std(scores[label]))
+    acc_mean.append(np.mean(scores[n_samples]))
+    acc_std.append(np.std(scores[n_samples]))
 
 # First, try a line plot, with shaded variance regions:
 import matplotlib.pyplot as plt
 
 means = np.array(acc_mean)
 std = np.array(acc_std)
-plt.plot(percentages, acc_mean, "o-")
-plt.fill_between(percentages, means - std, means + std, alpha=0.2)
-plt.xlabel("Percent Training Data")
+plt.plot(sizes, acc_mean, "o-")
+plt.fill_between(sizes, means - std, means + std, alpha=0.2)
+plt.xlabel("Num Samples")
 plt.ylabel("Mean Accuracy")
-plt.xlim([0, 100])
+plt.xlim([0, N])
 plt.title("Shaded Accuracy Plot")
 plt.savefig("graphs/p09-area-Accuracy.png")
 plt.show()
-
 
 # Second look at the boxplots in-order: (I like this better, IMO)
 simple_boxplot(
     scores,
     "Learning Curve",
-    xlabel="Percent Training Data",
+    xlabel="Num Samples",
     ylabel="Accuracy",
     save="graphs/p09-boxplots-Accuracy.png",
 )
