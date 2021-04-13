@@ -32,19 +32,16 @@ def extract_features(row):
     title = row["title"].lower()
     body = row["body"]
 
-    new_features: T.Dict[str, T.Any] = {}
     words = WORDS.findall(body)
     numbers = [int(x) for x in NUMBERS.findall(body)]
+    title_numbers = [int(x) for x in NUMBERS.findall(title)]
 
     new_features = {
-        "disambig": "disambiguation" in title,
-        "page_rank": row["page_rank"],
         "length": len(words),
-        # "18xx": sum(1 for x in numbers if 1800 < x <= 1900),
-        "random1": random.random(),
-        "random2": random.random(),
-        "random3": random.random(),
-        "random4": random.random(),
+        "17xx": sum(1 for x in numbers if 1700 < x <= 1800),
+        "18xx": sum(1 for x in numbers if 1800 < x <= 1900),
+        "19xx": sum(1 for x in numbers if 1900 < x <= 2000),
+        "20xx": sum(1 for x in numbers if 2000 < x <= 2100),
     }
     if len(numbers) > 0:
         new_features["mean_n"] = np.mean(numbers)
@@ -56,13 +53,12 @@ def extract_features(row):
 # right now each entry of the dataframe is a dictionary; json_normalize flattenst hat for us.
 designed_f = pd.json_normalize(df.apply(extract_features, axis="columns"))
 
-#%%
 
 # Pandas lets us join really easily.
 features: pd.DataFrame = designed_f.join([df.truth_value])
 # It also lets us get rid of missing values really easily, too.
 features = features.fillna(0.0)
-#%%
+
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import StandardScaler
@@ -98,7 +94,6 @@ vali_y, vali_X = prepare_data(vali_f)
 test_y, test_X = prepare_data(test_f)
 
 
-#%%
 from sklearn.linear_model import SGDClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -121,8 +116,6 @@ simple_boxplot(
     save="graphs/p10-tree-importances.png",
 )
 
-
-#%%
 
 graphs: T.Dict[str, T.List[float]] = {}
 
