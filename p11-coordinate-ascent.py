@@ -130,17 +130,17 @@ graphs = {}
 
 best_score = 0.0
 best_model = None
-for i in range(1000):
-    m = LinearRegressionModel.random(D)
-    train_score = m.score(X_vali, y_vali)
-    if train_score > best_score or best_model is None:
-        best_score = train_score
-        best_model = m
-        print("rand[{}] = {:.3}".format(i, train_score))
-
-print(["{:1.3f}".format(x[0]) for x in best_model.weights.tolist()])
-
-graphs["Best-of-Random"] = bootstrap_r2(best_model, X_vali, y_vali)
+# for i in range(1000):
+#     m = LinearRegressionModel.random(D)
+#     train_score = m.score(X_vali, y_vali)
+#     if train_score > best_score or best_model is None:
+#         best_score = train_score
+#         best_model = m
+#         print("rand[{}] = {:.3}".format(i, train_score))
+#
+# print(["{:1.3f}".format(x[0]) for x in best_model.weights.tolist()])
+#
+# graphs["Best-of-Random"] = bootstrap_r2(best_model, X_vali, y_vali)
 
 # SGD uses derivatives to 'aim' it's search... faster than CA which explores every direction!
 for i in range(20):
