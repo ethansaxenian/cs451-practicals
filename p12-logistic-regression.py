@@ -126,18 +126,17 @@ def train_logistic_regression_gd(name: str, num_iter=100):
     return m
 
 
-m = train_logistic_regression_gd("LR-GD", num_iter=2000)
-print("LR-GD AUC: {:.3}".format(np.mean(bootstrap_auc(m, X_vali, y_vali))))
-print("LR-GD Acc: {:.3}".format(m.score(X_vali, y_vali)))
+# m = train_logistic_regression_gd("LR-GD", num_iter=2000)
+# print("LR-GD AUC: {:.3}".format(np.mean(bootstrap_auc(m, X_vali, y_vali))))
+# print("LR-GD Acc: {:.3}".format(m.score(X_vali, y_vali)))
 
 
-def train_logistic_regression_sgd_opt(name: str, num_iter=100, minibatch_size=512):
+def train_logistic_regression_sgd_opt(name: str, num_iter=500, minibatch_size=512, alpha=0.1):
     """ This is bootstrap-sampling minibatch SGD """
     plot = ModelTrainingCurve()
     learning_curves[name] = plot
 
     m = LogisticRegressionModel.random(D)
-    alpha = 0.1
     n_samples = max(1, N // minibatch_size)
 
     for _ in tqdm(range(num_iter), total=num_iter, desc=name):
@@ -149,9 +148,12 @@ def train_logistic_regression_sgd_opt(name: str, num_iter=100, minibatch_size=51
     return m
 
 
-m = train_logistic_regression_sgd_opt("LR-SGD", num_iter=2000)
-print("LR-SGD AUC: {:.3}".format(np.mean(bootstrap_auc(m, X_vali, y_vali))))
-print("LR-SGD Acc: {:.3}".format(m.score(X_vali, y_vali)))
+# m = train_logistic_regression_sgd_opt("LR-SGD", num_iter=2000)
+# print("LR-SGD AUC: {:.3}".format(np.mean(bootstrap_auc(m, X_vali, y_vali))))
+# print("LR-SGD Acc: {:.3}".format(m.score(X_vali, y_vali)))
+
+for alpha in [1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001]:
+    train_logistic_regression_sgd_opt(f"LR-SGD {alpha}", alpha=alpha)
 
 
 ## Create training curve plots:
