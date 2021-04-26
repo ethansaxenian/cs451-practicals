@@ -196,6 +196,9 @@ plt.show()
 # 4. make a graph including some faster and slower alphas:
 # .... alpha = [0.05, 0.1, 0.5, 1.0]
 # .... what do you notice?
+"""
+Larger alphas appear to train faster
+"""
 
 # (B) Explore 'Automatic/Early Stopping'
 #
