@@ -67,7 +67,10 @@ for i in range(100):
     X_sample, y_sample = resample(X_train, y_train)  # type:ignore
 
     # TODO create a tree model.
-    tree = TODO("train and fit a model to the sampled data")
+    tree = DecisionTreeClassifier()
+    tree.fit(X_sample, y_sample)
+
+    acc = tree.score(X_vali, y_vali)
 
     # TODO Experiment:
     # What if instead of every tree having the same 1.0 weight, we considered some alternatives?
@@ -75,13 +78,13 @@ for i in range(100):
     #  - weight = the accuracy of that tree on the validation set.
     #  - weight = random.random()
     #  - weight = 0.1
-    weight = 1.0
+    weight = 0.1
 
     # hold onto it for voting
     forest.insert(weight, tree)
 
     tree_num.append(i)
-    tree_vali.append(tree.score(X_vali, y_vali))
+    tree_vali.append(acc)
     forest_vali.append(forest.score(X_vali, y_vali))
     if i % 5 == 0:
         print("Tree[{}] = {:.3}".format(i, tree_vali[-1]))
@@ -92,4 +95,5 @@ import matplotlib.pyplot as plt
 plt.plot(tree_num, tree_vali, label="Individual Trees", alpha=0.5)
 plt.plot(tree_num, forest_vali, label="Random Forest")
 plt.legend()
+plt.savefig(f"graphs/p14-weight-0.1.png")
 plt.show()
