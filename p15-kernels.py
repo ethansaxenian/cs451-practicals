@@ -1,4 +1,3 @@
-#%%
 import random
 from shared import bootstrap_accuracy, simple_boxplot
 import numpy as np
@@ -6,8 +5,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 import typing as T
 from dataclasses import dataclass
-
-#%%
 
 # start off by seeding random number generators:
 RANDOM_SEED = 12345
@@ -21,11 +18,10 @@ X_train = Xd_train["numeric"]
 X_vali = Xd_vali["numeric"]
 
 (N, D) = X_train.shape
-#%% Train up Forest models:
 
 forest = RandomForestClassifier()
 forest.fit(X_train, y_train)
-print("Forest.score = {:.3}".format(forest.score(X_vali, y_vali)))
+print(f"Forest.score = {forest.score(X_vali, y_vali):.3}")
 
 lr = LogisticRegression()
 lr.fit(X_train, y_train)
@@ -37,15 +33,16 @@ graphs = {
     "LR": bootstrap_accuracy(lr, X_vali, y_vali),
 }
 
-#%% SVM
 from sklearn.svm import SVC as SVMClassifier
 
-configs = []
-configs.append({"kernel": "linear"})
-configs.append({"kernel": "poly", "degree": 2})
-configs.append({"kernel": "poly", "degree": 3})
-configs.append({"kernel": "rbf"})
-# configs.append({"kernel": "sigmoid"}) # just awful.
+configs = [
+    {"kernel": "linear"},
+    {"kernel": "poly", "degree": 2},
+    {"kernel": "poly", "degree": 3},
+    {"kernel": "rbf", "gamma": "scale"},
+    {"kernel": "rbf", "gamma": "auto"},
+    # {"kernel": "sigmoid"}
+]
 
 
 @dataclass
@@ -53,7 +50,6 @@ class ModelInfo:
     name: str
     accuracy: float
     model: T.Any
-    X_vali: T.Optional[np.ndarray] = None
 
 
 # TODO: C is the most important value for a SVM.
@@ -63,14 +59,12 @@ class ModelInfo:
 for cfg in configs:
     variants: T.List[ModelInfo] = []
     for class_weights in [None, "balanced"]:
-        for c_val in [1.0]:
+        for c_val in [1.0, 2.0, 0.5, 0.1, 5, 10]:
             svm = SVMClassifier(C=c_val, class_weight=class_weights, **cfg)
             svm.fit(X_train, y_train)
-            name = "k={}{} C={} {}".format(
-                cfg["kernel"], cfg.get("degree", ""), c_val, class_weights or ""
-            )
+            name = f"k={cfg['kernel']}{cfg.get('degree', ' ')}{cfg.get('gamma', '')} C={c_val} {class_weights or 'None'}"
             accuracy = svm.score(X_vali, y_vali)
-            print("{}. score= {:.3}".format(name, accuracy))
+            print(f"{name}. score= {accuracy:.3}")
             variants.append(ModelInfo(name, accuracy, svm))
     best = max(variants, key=lambda x: x.accuracy)
     graphs[best.name] = bootstrap_accuracy(best.model, X_vali, y_vali)
