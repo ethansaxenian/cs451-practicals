@@ -41,6 +41,7 @@ configs = [
     {"kernel": "poly", "degree": 3},
     {"kernel": "rbf", "gamma": "scale"},
     {"kernel": "rbf", "gamma": "auto"},
+    {"kernel": "rbf", "gamma": 0.01},
     # {"kernel": "sigmoid"}
 ]
 
