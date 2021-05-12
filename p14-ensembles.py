@@ -1,14 +1,12 @@
 import random
-import numpy as np
+import typing as T
 from dataclasses import dataclass, field
+import matplotlib.pyplot as plt
+
+import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.utils import resample
-import typing as T
-from shared import TODO
 
 # start off by seeding random number generators:
 RANDOM_SEED = 12345
@@ -54,46 +52,45 @@ class WeightedEnsemble(ClassifierMixin):
         return class_votes > 0
 
 
-#%%
+for weight_type in ["1", "0.1", "random", "train-acc", "vali-acc"]:
+    tree_num = []
+    tree_vali = []
+    forest_vali = []
 
-tree_num = []
-tree_vali = []
-forest_vali = []
+    forest = WeightedEnsemble()
+    (N, D) = X_train.shape
+    for i in range(100):
+        # bootstrap sample the training data
+        X_sample, y_sample = resample(X_train, y_train)
 
-forest = WeightedEnsemble()
-(N, D) = X_train.shape
-for i in range(100):
-    # bootstrap sample the training data
-    X_sample, y_sample = resample(X_train, y_train)  # type:ignore
+        tree = DecisionTreeClassifier()
+        tree.fit(X_sample, y_sample)
 
-    # TODO create a tree model.
-    tree = DecisionTreeClassifier()
-    tree.fit(X_sample, y_sample)
+        acc = tree.score(X_vali, y_vali)
 
-    acc = tree.score(X_vali, y_vali)
+        weight_options = {
+            "1": 1,
+            "0.1": 0.1,
+            "random": random.random(),
+            "train-acc": tree.score(X_train, y_train),
+            "vali-acc": acc
+        }
 
-    # TODO Experiment:
-    # What if instead of every tree having the same 1.0 weight, we considered some alternatives?
-    #  - weight = the accuracy of that tree on the whole training set.
-    #  - weight = the accuracy of that tree on the validation set.
-    #  - weight = random.random()
-    #  - weight = 0.1
-    weight = 0.1
+        weight = weight_options[weight_type]
 
-    # hold onto it for voting
-    forest.insert(weight, tree)
+        # hold onto it for voting
+        forest.insert(weight, tree)
 
-    tree_num.append(i)
-    tree_vali.append(acc)
-    forest_vali.append(forest.score(X_vali, y_vali))
-    if i % 5 == 0:
-        print("Tree[{}] = {:.3}".format(i, tree_vali[-1]))
-        print("Forest[{}] = {:.3}".format(i, forest_vali[-1]))
+        tree_num.append(i)
+        tree_vali.append(acc)
+        forest_vali.append(forest.score(X_vali, y_vali))
+        if i % 5 == 0:
+            print(f"Tree[{i}] = {tree_vali[-1]:.3}")
+            print(f"Forest[{i}] = {forest_vali[-1]:.3}")
 
-import matplotlib.pyplot as plt
-
-plt.plot(tree_num, tree_vali, label="Individual Trees", alpha=0.5)
-plt.plot(tree_num, forest_vali, label="Random Forest")
-plt.legend()
-plt.savefig(f"graphs/p14-weight-0.1.png")
-plt.show()
+    plt.plot(tree_num, tree_vali, label="Individual Trees", alpha=0.5)
+    plt.plot(tree_num, forest_vali, label="Random Forest")
+    plt.legend()
+    plt.title(f"weight = {weight_type}")
+    plt.savefig(f"graphs/p14-weight-{weight_type}.png")
+    plt.show()
