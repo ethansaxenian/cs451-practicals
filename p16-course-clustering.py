@@ -56,7 +56,7 @@ V = viz.fit_transform(X)
 # Right now, let's assign colors to our class-nodes based on their number.
 color_values = levels  # TODO swap this.
 
-plot.title("T-SNE(Courses), perplexity={}".format(perplexity))
+plot.title(f"T-SNE(Courses), perplexity={perplexity}")
 plot.scatter(V[:, 0], V[:, 1], alpha=1, s=10, c=color_values, cmap="turbo")
 
 # Annotate the scattered points with their course number.
@@ -66,5 +66,5 @@ for i in range(len(numbers)):
     y = V[i, 1]
     plot.annotate(course_num, (x, y))
 
-plot.savefig("graphs/p16-tsne-courses-p{}.png".format(perplexity))
+plot.savefig(f"graphs/p16-tsne-courses-p{perplexity}.png")
 plot.show()
